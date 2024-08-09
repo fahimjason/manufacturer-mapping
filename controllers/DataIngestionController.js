@@ -14,12 +14,15 @@ class DataIngestionController {
             console.log('Products CSV file successfully processed');
             console.log('Match table CSV file successfully processed');
 
+            console.log('Sample product data:', products.slice(0, 3));
+            console.log('Sample match data:', matchTable.slice(0, 3));
+
             await DataIngestionController.storeDataInDatabase(products, matchTable);
 
             res.send('Data ingestion completed');
         } catch (error) {
             console.error('Error during data ingestion:', error);
-            res.status(500).send('Error during data ingestion');
+            res.status(500).send(`Error during data ingestion: ${error.message}`);
         }
     }
 
@@ -27,7 +30,7 @@ class DataIngestionController {
         return new Promise((resolve, reject) => {
             const results = [];
             fs.createReadStream(filename)
-                .pipe(csv({ separator: ';' }))  // Specify semicolon as the separator
+                .pipe(csv({ separator: ';' }))
                 .on('data', (data) => {
                     Object.keys(data).forEach(key => {
                         if (data[key] === '') {
@@ -46,7 +49,7 @@ class DataIngestionController {
         let transactionActive = false;
 
         try {
-            await this.runQuery(db, "BEGIN TRANSACTION");
+            await DataIngestionController.runQuery(db, "BEGIN TRANSACTION");
             transactionActive = true;
 
             const productColumns = Object.keys(products[0]).filter(col => col !== 'id');
@@ -55,38 +58,38 @@ class DataIngestionController {
             const escapedProductColumns = productColumns.map(col => `"${col}"`);
             const escapedMatchColumns = matchColumns.map(col => `"${col}"`);
 
-            await this.runQuery(db, `CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, ${escapedProductColumns.map(col => `${col} TEXT`).join(', ')})`);
-            await this.runQuery(db, `CREATE TABLE IF NOT EXISTS match_table (id INTEGER PRIMARY KEY AUTOINCREMENT, ${escapedMatchColumns.map(col => `${col} TEXT`).join(', ')})`);
+            await DataIngestionController.runQuery(db, `CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, ${escapedProductColumns.map(col => `${col} TEXT`).join(', ')})`);
+            await DataIngestionController.runQuery(db, `CREATE TABLE IF NOT EXISTS match_table (id INTEGER PRIMARY KEY AUTOINCREMENT, ${escapedMatchColumns.map(col => `${col} TEXT`).join(', ')})`);
 
-            const insertProduct = await this.prepareStatement(db, `INSERT INTO products (${escapedProductColumns.join(', ')}) VALUES (${productColumns.map(() => '?').join(', ')})`);
+            const insertProduct = await DataIngestionController.prepareStatement(db, `INSERT INTO products (${escapedProductColumns.join(', ')}) VALUES (${productColumns.map(() => '?').join(', ')})`);
             for (const product of products) {
                 const values = productColumns.map(col => product[col]);
-                await this.runStatement(insertProduct, values);
+                await DataIngestionController.runStatement(insertProduct, values);
             }
-            await this.finalizeStatement(insertProduct);
+            await DataIngestionController.finalizeStatement(insertProduct);
 
-            const insertMatch = await this.prepareStatement(db, `INSERT INTO match_table (${escapedMatchColumns.join(', ')}) VALUES (${matchColumns.map(() => '?').join(', ')})`);
+            const insertMatch = await DataIngestionController.prepareStatement(db, `INSERT INTO match_table (${escapedMatchColumns.join(', ')}) VALUES (${matchColumns.map(() => '?').join(', ')})`);
             for (const match of matchTable) {
                 const values = matchColumns.map(col => match[col]);
-                await this.runStatement(insertMatch, values);
+                await DataIngestionController.runStatement(insertMatch, values);
             }
-            await this.finalizeStatement(insertMatch);
+            await DataIngestionController.finalizeStatement(insertMatch);
 
-            await this.runQuery(db, "COMMIT");
+            await DataIngestionController.runQuery(db, "COMMIT");
             transactionActive = false;
 
-            const { count: productCount } = await this.getFirstRow(db, "SELECT COUNT(*) AS count FROM products");
-            const { count: matchCount } = await this.getFirstRow(db, "SELECT COUNT(*) AS count FROM match_table");
+            const { count: productCount } = await DataIngestionController.getFirstRow(db, "SELECT COUNT(*) AS count FROM products");
+            const { count: matchCount } = await DataIngestionController.getFirstRow(db, "SELECT COUNT(*) AS count FROM match_table");
             console.log(`Inserted ${productCount} products and ${matchCount} matches into the database`);
 
-            const sampleProducts = await this.getAllRows(db, "SELECT * FROM products LIMIT 3");
-            const sampleMatches = await this.getAllRows(db, "SELECT * FROM match_table LIMIT 3");
+            const sampleProducts = await DataIngestionController.getAllRows(db, "SELECT * FROM products LIMIT 3");
+            const sampleMatches = await DataIngestionController.getAllRows(db, "SELECT * FROM match_table LIMIT 3");
             console.log('Sample inserted products:', sampleProducts);
             console.log('Sample inserted matches:', sampleMatches);
 
         } catch (error) {
             if (transactionActive) {
-                await this.runQuery(db, "ROLLBACK");
+                await DataIngestionController.runQuery(db, "ROLLBACK");
             }
             throw error;
         } finally {
@@ -144,6 +147,15 @@ class DataIngestionController {
             db.get(sql, params, (err, row) => {
                 if (err) reject(err);
                 else resolve(row);
+            });
+        });
+    }
+
+    static getAllRows(db, sql, params = []) {
+        return new Promise((resolve, reject) => {
+            db.all(sql, params, (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
             });
         });
     }
