@@ -1,36 +1,73 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.resolve(__dirname, '../data/manufacturers.db');
-const db = new sqlite3.Database(dbPath);
+const runQuery = (db, sql, params = []) => {
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, function (err) {
+            if (err) reject(err);
+            else resolve(this);
+        });
+    });
+}
 
-// products-> title;manufacturer;source;source_id;country_code;barcode;composition;description
-// matches-> id;m_source;c_source;m_country_code;c_country_code;m_source_id;c_source_id;validation_status
+const prepareStatement = (db, sql) => {
+    return new Promise((resolve, reject) => {
+        const stmt = db.prepare(sql, (err) => {
+            if (err) reject(err);
+            else resolve(stmt);
+        });
+    });
+}
 
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS main_products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        m_source TEXT,
-        m_source_id TEXT,
-        m_manufacturer TEXT,
-        m_product TEXT
-    )`);
+const runStatement = (stmt, params) => {
+    return new Promise((resolve, reject) => {
+        stmt.run(params, function (err) {
+            if (err) reject(err);
+            else resolve(this);
+        });
+    });
+}
 
-    db.run(`CREATE TABLE IF NOT EXISTS competitor_products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        c_source TEXT,
-        c_source_id TEXT,
-        c_manufacturer TEXT,
-        c_product TEXT
-    )`);
+const finalizeStatement = (stmt) => {
+    return new Promise((resolve, reject) => {
+        stmt.finalize((err) => {
+            if (err) reject(err);
+            else resolve();
+        });
+    });
+}
 
-    db.run(`CREATE TABLE IF NOT EXISTS product_match (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        m_source TEXT,
-        m_source_id TEXT,
-        c_source TEXT,
-        c_source_id TEXT
-    )`);
-});
+const getFirstRow = (db, sql, params = []) => {
+    return new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+}
 
-module.exports = db;
+const getAllRows = (db, sql, params = []) => {
+    return new Promise((resolve, reject) => {
+        db.all(sql, params, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+const getDB = (dbName) => {
+    const dbPath = path.resolve(__dirname, `../data/${dbName}.db`);
+    const db = new sqlite3.Database(dbPath);
+
+    return db;
+}
+
+module.exports = {
+    runQuery, 
+    prepareStatement,
+    runStatement,
+    finalizeStatement,
+    getFirstRow,
+    getAllRows,
+    getDB
+};

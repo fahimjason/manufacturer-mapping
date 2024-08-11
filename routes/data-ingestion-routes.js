@@ -7,7 +7,7 @@ const DataIngestionController = require('../controllers/DataIngestionController'
 const router = express.Router({ mergeParams: true });
 const upload = multer({ dest: 'uploads/' });
 
-const dbPath = path.join(__dirname, 'data/manufacturers.db');
+const dbPath = path.join(__dirname, '../data/manufacturers.db');
 
 const dataIngestionController = new DataIngestionController(dbPath);
 
