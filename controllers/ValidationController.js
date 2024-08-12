@@ -1,7 +1,15 @@
+const { getDB } = require("../config/db");
+
 class ValidationController {
-    static async validateMappings(req, res) {
+    constructor(dbPath) {
+        this.dbPath = dbPath;
+    }
+
+    async validateMappings(req, res) {
         const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for'];
         const suspiciousMappings = [];
+
+        const db = getDB(this.dbPath);
 
         db.all("SELECT * FROM related_manufacturers", (err, mappings) => {
             if (err) {

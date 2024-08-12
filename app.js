@@ -1,22 +1,16 @@
 // app.js
 const express = require('express');
 const dotenv = require('dotenv');
-const path = require('path');
-
-// Database setup
-const dbPath = path.join(__dirname, `data/${process.env.INSERT_DB_NAME}.db`);
 
 // Load env variables
 dotenv.config({ path: './config/config.env' });
-
-// Controllers
-const ValidationController = require('./controllers/ValidationController');
 
 // Route files
 const ingestData = require('./routes/data-ingestion');
 const mapManufacturers = require('./routes/manufacturer-mapping');
 const generateOutput = require('./routes/output-generate');
 const assignManufacturer = require('./routes/assign-manufacturer');
+const validate = require('./routes/validate');
 
 const app = express();
 
@@ -27,8 +21,7 @@ app.use(express.json());
 app.use('/ingest-data', ingestData);
 app.use('/map-manufacturers', mapManufacturers);
 app.use('/assign-manufacturer', assignManufacturer);
-
-app.get('/validate', ValidationController.validateMappings);
+app.use('/validate', validate);
 app.use('/generate-output', generateOutput);
 
 // Global error handler
