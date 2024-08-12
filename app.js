@@ -18,11 +18,11 @@ const app = express();
 app.use(express.json());
 
 // Routes
-app.use('/ingest-data', ingestData);
-app.use('/map-manufacturers', mapManufacturers);
-app.use('/assign-manufacturer', assignManufacturer);
-app.use('/validate', validate);
-app.use('/generate-output', generateOutput);
+app.use('/api/v1/ingest-data', ingestData);
+app.use('/api/v1/map-manufacturers', mapManufacturers);
+app.use('/api/v1/assign-manufacturer', assignManufacturer);
+app.use('/api/v1/validate', validate);
+app.use('/api/v1/generate-output', generateOutput);
 
 // Global error handler
 app.use((err, req, res, next) => {
