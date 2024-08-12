@@ -21,8 +21,9 @@ class ProductTitleController {
                 return res.status(500).send('Error assigning manufacturer');
             }
 
+            // Filter out null or undefined manufacturers and check for matches
             const potentialManufacturers = manufacturers.filter(m =>
-                words.some(word => m.manufacturer.toLowerCase().includes(word))
+                m?.manufacturer && words.some(word => m.manufacturer.toLowerCase().includes(word))
             );
 
             if (potentialManufacturers.length === 0) {
