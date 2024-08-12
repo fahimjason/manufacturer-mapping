@@ -1,12 +1,21 @@
 const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 
 const runQuery = (db, sql, params = []) => {
     return new Promise((resolve, reject) => {
-        db.run(sql, params, function (err) {
-            if (err) reject(err);
-            else resolve(this);
-        });
+        const callback = function (err) {
+            if (err) {
+                console.error('Error running query:', err);
+                reject(err);
+            } else {
+                resolve(this);
+            }
+        };
+
+        if (typeof sql === 'string') {
+            db.run(sql, params, callback);
+        } else {
+            sql.run(params, callback);
+        }
     });
 }
 
@@ -55,11 +64,28 @@ const getAllRows = (db, sql, params = []) => {
     });
 }
 
-const getDB = (dbName) => {
-    const dbPath = path.resolve(__dirname, `../data/${dbName}.db`);
-    const db = new sqlite3.Database(dbPath);
+const getDB = (dbPath) => {
+    return new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+            console.error('Error opening database:', err.message);
+        } else {
+            // console.log('Connected to the database.');
+        }
+    });
+}
 
-    return db;
+const closeDb = (db) => {
+    return new Promise((resolve, reject) => {
+        db.close((err) => {
+            if (err) {
+                console.error('Error closing database:', err.message);
+                reject(err);
+            } else {
+                // console.log('Database connection closed.');
+                resolve();
+            }
+        });
+    });
 }
 
 module.exports = {
@@ -69,5 +95,6 @@ module.exports = {
     finalizeStatement,
     getFirstRow,
     getAllRows,
-    getDB
+    getDB,
+    closeDb
 };

@@ -10,42 +10,43 @@ const dbPath = path.join(__dirname, `data/${process.env.INSERT_DB_NAME}.db`);
 dotenv.config({ path: './config/config.env' });
 
 // Controllers
-const DataPreprocessingController = require('./controllers/DataPreprocessingController');
-const ManufacturerMappingController = require('./controllers/ManufacturerMappingController');
 const ProductTitleController = require('./controllers/ProductTitleController');
 const ValidationController = require('./controllers/ValidationController');
 const OutputGenerationController = require('./controllers/OutputGenerationController');
 
 // Route files
-const ingestRoute = require('./routes/data-ingestion');
+const ingestData = require('./routes/data-ingestion');
+const mapManufacturers = require('./routes/manufacturer-mapping');
 
 const app = express();
-const port = 3000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-const dataPreprocessingController = new DataPreprocessingController(dbPath);
-
 // Routes
-app.use('/ingest-data', ingestRoute);
+app.use('/ingest-data', ingestData);
+app.use('/map-manufacturers', mapManufacturers);
 
-app.post('/preprocess-data', async (req, res) => {
-    try {
-        await dataPreprocessingController.preprocessData(req, res);
-    } catch (error) {
-        console.error('Error in preprocessing route:', error);
-        res.status(500).json({ error: 'Internal server error during preprocessing' });
-    }
-});
-
-// app.get('/preprocess', DataPreprocessingController.preprocessData);
-app.get('/map-manufacturers', ManufacturerMappingController.mapManufacturers);
 app.get('/assign-manufacturer', ProductTitleController.assignManufacturer);
 app.get('/validate', ValidationController.validateMappings);
 app.get('/generate-output', OutputGenerationController.generateOutput);
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
+// Global error handler
+app.use((err, req, res, next) => {
+    console.error('Global error handler caught an error:', err);
+    res.status(500).json({
+        error: 'Internal Server Error',
+        message: err.message,
+        stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Application specific logging, throwing an error, or other logic here
 });
