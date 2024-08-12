@@ -123,3 +123,35 @@
 ## Purpose
 - To gather all necessary data for manufacturer mapping
 - To establish relationships between products across different sources
+
+
+## Run Locally
+Rename "config/config.env.env" to "config/config.env" and update the values/settings to your own
+
+### Install Dependencies
+
+```
+npm install
+```
+
+### Run App
+
+```
+# Clone from GitHub
+git clone git@github.com:fahimjason/manufacturer-mapping.git
+
+# Move to the directory 
+cd manufacturer-mapping
+
+# Run in dev mode
+npm run dev
+
+# Run in prod mode
+npm start
+```
+
+<!-- ## Demo -->
+Extensive documentation with examples [here](https://documenter.getpostman.com/view/17345473/2sA3s4kpo2)
+
+-   Version: 1.0.0
+-   Author: [Fahim](https://www.linkedin.com/in/fahimjason)
