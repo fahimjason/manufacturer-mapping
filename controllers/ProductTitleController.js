@@ -1,6 +1,13 @@
+const { getDB } = require("../config/db");
+
 class ProductTitleController {
-    static async assignManufacturer(req, res) {
+    constructor(dbPath) {
+        this.dbPath = dbPath;
+    }
+
+    async assignManufacturer(req, res) {
         const { title } = req.query;
+        const db = getDB(this.dbPath);
 
         if (!title) {
             return res.status(400).send('Product title is required');
