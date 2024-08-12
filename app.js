@@ -1,9 +1,13 @@
 // app.js
 const express = require('express');
+const dotenv = require('dotenv');
 const path = require('path');
 
 // Database setup
-const dbPath = path.join(__dirname, 'data/manufacturers.db');
+const dbPath = path.join(__dirname, `data/${process.env.INSERT_DB_NAME}.db`);
+
+// Load env variables
+dotenv.config({ path: './config/config.env' });
 
 // Controllers
 const DataPreprocessingController = require('./controllers/DataPreprocessingController');
@@ -13,7 +17,7 @@ const ValidationController = require('./controllers/ValidationController');
 const OutputGenerationController = require('./controllers/OutputGenerationController');
 
 // Route files
-const ingestRoute = require('./routes/data-ingestion-routes');
+const ingestRoute = require('./routes/data-ingestion');
 
 const app = express();
 const port = 3000;
