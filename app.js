@@ -12,11 +12,11 @@ dotenv.config({ path: './config/config.env' });
 // Controllers
 const ProductTitleController = require('./controllers/ProductTitleController');
 const ValidationController = require('./controllers/ValidationController');
-const OutputGenerationController = require('./controllers/OutputGenerationController');
 
 // Route files
 const ingestData = require('./routes/data-ingestion');
 const mapManufacturers = require('./routes/manufacturer-mapping');
+const generateOutput = require('./routes/output-generate');
 
 const app = express();
 
@@ -29,7 +29,7 @@ app.use('/map-manufacturers', mapManufacturers);
 
 app.get('/assign-manufacturer', ProductTitleController.assignManufacturer);
 app.get('/validate', ValidationController.validateMappings);
-app.get('/generate-output', OutputGenerationController.generateOutput);
+app.use('/generate-output', generateOutput);
 
 // Global error handler
 app.use((err, req, res, next) => {
